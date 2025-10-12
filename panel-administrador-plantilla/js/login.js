@@ -3,7 +3,11 @@ import { auth } from './firebase.js';
 import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const loginForm = document.getElementById('login-form');
-const errorMessage = document.getElementById('error-message');
+const errorMessage = document.createElement('p');
+errorMessage.style.color = '#e8716d';
+errorMessage.style.textAlign = 'center';
+errorMessage.style.marginBottom = '1rem';
+loginForm.insertBefore(errorMessage, loginForm.querySelector('.forms_fieldset'));
 
 // Si un usuario ya autenticado llega a la página de login, lo redirigimos al panel.
 onAuthStateChanged(auth, (user) => {
@@ -31,3 +35,26 @@ loginForm.addEventListener('submit', async (e) => {
         errorMessage.textContent = message;
     }
 });
+
+/**
+ * Variables para la animación
+ */
+const signupButton = document.getElementById('signup-button');
+const loginButton = document.getElementById('login-button');
+const userForms = document.getElementById('user_options-forms');
+
+/**
+ * Añadir evento al botón "Saber Más"
+ */
+signupButton.addEventListener('click', () => {
+  userForms.classList.remove('bounceRight');
+  userForms.classList.add('bounceLeft');
+}, false);
+
+/**
+ * Añadir evento al botón "Iniciar Sesión"
+ */
+loginButton.addEventListener('click', () => {
+  userForms.classList.remove('bounceLeft');
+  userForms.classList.add('bounceRight');
+}, false);
