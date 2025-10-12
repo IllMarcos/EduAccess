@@ -1,0 +1,188 @@
+/* css/main.css - Versión Funcional y Elegante */
+
+/* --- 1. Importación y Variables --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg-main: #f4f7fa; /* Un gris muy claro para el fondo */
+    --bg-sidebar: #ffffff;
+    --bg-card: #ffffff;
+    --text-header: #1a202c; /* Un negro suave */
+    --text-body: #4a5568; /* Un gris medio */
+    --text-light: #a0aec0; /* Un gris claro para detalles */
+    --primary: #4299e1; /* Un azul profesional */
+    --primary-hover: #2b6cb0;
+    --border-color: #e2e8f0; /* Borde sutil */
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* --- 2. Estilos Base --- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-body);
+}
+
+.hidden { display: none !important; }
+
+/* --- 3. Layout Principal (Sidebar + Contenido) --- */
+.app-layout {
+    display: flex;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh; /* Ocupa toda la altura de la ventana */
+}
+
+.main-content {
+    flex-grow: 1;
+    margin-left: 250px; /* Ancho del sidebar */
+    padding: 2rem;
+    height: 100vh; /* Ocupa toda la altura */
+    overflow-y: auto; /* PERMITE EL SCROLL */
+}
+
+/* --- 4. Componentes del Sidebar --- */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-header);
+    margin-bottom: 2.5rem;
+}
+
+.sidebar-header .icon {
+    color: var(--primary);
+}
+
+/* IMPORTANTE: Corrige el tamaño de los iconos */
+.sidebar-header svg, .sidebar-nav svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    color: var(--text-body);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.sidebar-nav a:hover {
+    background-color: #ebf8ff; /* Un azul muy claro */
+    color: var(--primary);
+}
+
+.sidebar-footer {
+    margin-top: auto;
+}
+
+/* --- 5. Componentes del Contenido Principal --- */
+.content-header {
+    margin-bottom: 2rem;
+}
+.content-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-header);
+}
+
+.card {
+    background-color: var(--bg-card);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+.card h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-header);
+    margin-bottom: 1.5rem;
+}
+
+.btn {
+    padding: 0.6rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.btn-danger {
+    background-color: transparent;
+    border-color: var(--border-color);
+    color: var(--text-body);
+}
+.btn-danger:hover {
+    background-color: #fef2f2; /* Rojo claro */
+    border-color: #fca5a5; /* Borde rojo */
+    color: #ef4444; /* Texto rojo */
+}
+
+.input-field {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    color: var(--text-header);
+}
+.input-field:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+}
+
+/* --- 6. Modal --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow);
+    text-align: center;
+}
