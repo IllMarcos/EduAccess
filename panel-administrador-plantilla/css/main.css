@@ -186,3 +186,35 @@ body {
     box-shadow: var(--shadow);
     text-align: center;
 }
+/* --- 7. Componente de Notificación (Toast) --- */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--text-header);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s, bottom 0.3s;
+}
+
+.toast.show {
+    opacity: 1;
+    bottom: 3rem;
+}
+/* --- 8. Vistas de Contenido y Navegación Activa --- */
+.sidebar-nav a.active {
+    background-color: #ebf8ff; /* Un azul muy claro */
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.view {
+    display: block; /* O 'grid', 'flex', etc., según necesites */
+}
+
+/* El .hidden sigue siendo nuestro ayudante principal para ocultar vistas */
