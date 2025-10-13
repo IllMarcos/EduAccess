@@ -43,45 +43,76 @@
         <main class="main-content">
             <div id="view-dashboard" class="view">
                 <header class="content-header"><h1>Dashboard</h1></header>
-                <div class="card"><p>Bienvenido al panel de EduAccess. Aquí podrás ver estadísticas generales (próximamente).</p></div>
+                <div class="card">
+                    <h2>¡Bienvenido!</h2>
+                    <p>Selecciona una opción de la barra lateral para comenzar a gestionar la información de la escuela.</p>
+                </div>
             </div>
+
             <div id="view-groups" class="view hidden">
                 <header class="content-header"><h1>Gestión de Grupos</h1></header>
-                <div class="card">
-                    <h2>Agregar Nuevo Grupo</h2>
-                    <form id="add-group-form" style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
-                        <input type="text" id="group-name" placeholder="Ej. 1º A Primaria" class="input-field" style="flex-grow: 1;" required>
-                        <button type="submit" class="btn btn-primary">Agregar</button>
-                    </form>
-                </div>
-                <div class="card" style="margin-top: 1.5rem;">
-                    <h2>Grupos Existentes</h2>
-                    <div id="groups-list" style="display: grid; gap: 0.75rem;"></div>
+                <div class="view-layout-grid">
+                    <div class="form-card">
+                        <div class="card">
+                            <h2>Nuevo Grupo</h2>
+                            <form id="add-group-form">
+                                <label for="group-name">Nombre del Grupo</label>
+                                <input type="text" id="group-name" placeholder="Ej. 1º A Primaria" class="input-field" required>
+                                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Agregar Grupo</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="list-card">
+                        <div class="card">
+                            <h2>Grupos Existentes</h2>
+                            <div id="groups-list" class="item-list">
+                                </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
             <div id="view-students" class="view hidden">
                 <header class="content-header"><h1>Gestión de Alumnos</h1></header>
-                <div class="card">
-                    <h2>Inscribir Nuevo Alumno</h2>
-                    <form id="add-student-form" style="display: grid; gap: 1rem; margin-bottom: 1.5rem;">
-                        <input type="text" id="student-name" placeholder="Nombre completo del alumno" class="input-field" required>
-                        <select id="group-select" class="input-field" required></select>
-                        <button type="submit" class="btn btn-primary" style="justify-self: start;">Inscribir Alumno</button>
-                    </form>
-                </div>
-                <div class="card" style="margin-top: 1.5rem;">
-                    <h2>Alumnos Inscritos</h2>
-                    <div id="students-list" style="display: grid; gap: 0.75rem;"></div>
+                <div class="view-layout-grid">
+                    <div class="form-card">
+                        <div class="card">
+                            <h2>Inscribir Alumno</h2>
+                            <form id="add-student-form">
+                                <label for="student-name">Nombre Completo</label>
+                                <input type="text" id="student-name" placeholder="Nombre del alumno" class="input-field" required>
+                                
+                                <label for="group-select" style="margin-top: 1rem;">Asignar a Grupo</label>
+                                <select id="group-select" class="input-field" required></select>
+                                
+                                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">Inscribir Alumno</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="list-card">
+                        <div class="card">
+                            <h2>Alumnos Inscritos</h2>
+                            <div id="students-list" class="item-list">
+                                </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+            
             <div id="view-announcements" class="view hidden">
                 <header class="content-header"><h1>Enviar Avisos</h1></header>
-                <div class="card">
-                    <h2>Redactar y Enviar Aviso</h2>
-                    <form id="send-announcement-form" style="display: grid; gap: 1rem;">
-                        <textarea id="announcement-text" placeholder="Escribe tu mensaje aquí..." class="input-field" style="min-height: 8rem;" required></textarea>
+                <div class="card" style="max-width: 800px; margin: 0 auto;">
+                    <h2>Compositor de Avisos</h2>
+                    <form id="send-announcement-form" class="announcement-form">
+                        <label for="announcement-group-select">Enviar a:</label>
                         <select id="announcement-group-select" class="input-field" required></select>
-                        <button type="submit" class="btn btn-primary" style="justify-self: start;">Enviar Aviso a Grupo</button>
+                        
+                        <label for="announcement-text">Mensaje:</label>
+                        <textarea id="announcement-text" placeholder="Escribe tu mensaje aquí..." class="input-field" required></textarea>
+                        
+                        <div style="text-align: right;">
+                            <button type="submit" class="btn btn-primary">Enviar Aviso</button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -93,6 +124,17 @@
             <h3 id="qr-student-name" style="font-size: 1.5rem; font-weight: 600; color: var(--text-header); margin-bottom: 1rem;"></h3>
             <div id="qrcode-container" style="display: flex; justify-content: center; padding: 1rem; background-color: white; border-radius: 0.5rem; border: 1px solid var(--border-color);"></div>
             <button id="close-modal-btn" class="btn btn-danger" style="margin-top: 1.5rem;">Cerrar</button>
+         </div>
+    </div>
+
+    <div id="confirmation-modal" class="hidden modal-overlay">
+         <div class="modal-content" style="max-width: 400px;">
+            <h3 id="modal-title" style="font-size: 1.5rem; font-weight: 600; color: var(--text-header); margin-bottom: 1rem;">Confirmar Acción</h3>
+            <p id="modal-message" style="color: var(--text-body); margin-bottom: 2rem;">¿Estás seguro de que quieres realizar esta acción?</p>
+            <div class="modal-actions">
+                <button id="modal-cancel-btn" class="btn btn-secondary">Cancelar</button>
+                <button id="modal-confirm-btn" class="btn btn-danger-solid">Sí, Eliminar</button>
+            </div>
          </div>
     </div>
     

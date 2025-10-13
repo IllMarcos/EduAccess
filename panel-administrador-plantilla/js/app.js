@@ -60,7 +60,6 @@ navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
         e.preventDefault();
         const hash = e.currentTarget.getAttribute('href');
-        // Actualizar la URL para que el usuario pueda recargar la página en la misma vista
         window.location.hash = hash;
         navigateTo(hash);
     });
@@ -81,14 +80,12 @@ onAuthStateChanged(auth, async (user) => {
             await displayGroups(currentSchoolId);
             await displayStudents(currentSchoolId);
             
-            // Navegar a la vista correcta (basado en el hash de la URL o al dashboard por defecto)
             navigateTo(window.location.hash || '#dashboard');
         } else {
             alert("No tienes permisos de administrador.");
             await signOut(auth);
         }
     } else {
-        // Si no hay usuario, redirigir a la página de login.
         window.location.href = 'login.html';
     }
 });
@@ -123,8 +120,18 @@ async function displayGroups(schoolId) {
         addStudentCard.title = "";
         querySnapshot.forEach(doc => {
             const groupElement = document.createElement('div');
-            groupElement.className = 'list-item';
-            groupElement.innerHTML = `<p style="color: var(--text-primary); font-weight: 500;">${doc.data().name}</p><button data-id="${doc.id}" class="delete-btn">✖</button>`;
+            // MODIFICADO: Se usa la nueva clase 'list-item'
+            groupElement.className = 'list-item'; 
+            groupElement.innerHTML = `
+                <div class="item-info">
+                    <p>${doc.data().name}</p>
+                </div>
+                <div class="item-actions">
+                    <button data-id="${doc.id}" class="action-btn delete delete-btn" title="Eliminar Grupo">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.033-2.134H8.033C6.91 2.75 6 3.704 6 4.834v.916m7.5 0z" /></svg>
+                    </button>
+                </div>
+            `;
             groupsListContainer.appendChild(groupElement);
         });
     }
@@ -142,8 +149,10 @@ addGroupForm.addEventListener('submit', async (e) => {
 });
 
 groupsListContainer.addEventListener('click', async (e) => {
-    if (e.target.classList.contains('delete-btn')) {
-        const groupId = e.target.dataset.id;
+    // Se usa .closest() para asegurar que el click funcione aunque se presione el icono svg
+    const deleteButton = e.target.closest('.delete-btn');
+    if (deleteButton) {
+        const groupId = deleteButton.dataset.id;
         
         const studentsRef = collection(db, 'schools', currentSchoolId, 'students');
         const q = query(studentsRef, where("groupId", "==", groupId));
@@ -186,15 +195,22 @@ async function displayStudents(schoolId) {
         const groupName = groupsMap.get(student.groupId) || 'Sin grupo';
         const studentElement = document.createElement('div');
         studentElement.className = 'list-item';
+        
+        // MODIFICADO: Nuevo HTML para la lista de alumnos con acciones e iconos.
         studentElement.innerHTML = `
-            <div>
-                <p style="color: var(--text-primary); font-weight: 500;">${student.name}</p>
-                <p style="font-size: 0.875rem;">${groupName}</p>
+            <div class="item-info">
+                <p>${student.name}</p>
+                <p>${groupName}</p>
             </div>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-                <button data-qr="${student.qrId}" data-name="${student.name}" class="view-qr-btn" style="background: none; border: none; color: var(--text-secondary); cursor: pointer;">Ver QR</button>
-                <button data-id="${doc.id}" class="delete-btn">✖</button>
+            <div class="item-actions">
+                <button data-qr="${student.qrId}" data-name="${student.name}" class="action-btn view-qr-btn" title="Ver QR">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.5Q3.75 3 5.25 3h13.5Q20.25 3 20.25 4.5v13.5q0 1.5-1.5 1.5H5.25q-1.5 0-1.5-1.5V4.5zM8.25 8.25h1.5v1.5h-1.5V8.25zm3 0h1.5v1.5h-1.5V8.25zm-3 3h1.5v1.5h-1.5v-1.5zm3 0h1.5v1.5h-1.5v-1.5zm3 0h1.5v1.5h-1.5v-1.5zm-3 3h1.5v1.5h-1.5v-1.5zm3 0h1.5v1.5h-1.5v-1.5z"/></svg>
+                </button>
+                <button data-id="${doc.id}" class="action-btn delete delete-btn" title="Eliminar Alumno">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.033-2.134H8.033C6.91 2.75 6 3.704 6 4.834v.916m7.5 0z" /></svg>
+                </button>
             </div>`;
+            
         studentsListContainer.appendChild(studentElement);
     });
 }
@@ -215,10 +231,25 @@ addStudentForm.addEventListener('submit', async (e) => {
 });
 
 studentsListContainer.addEventListener('click', async (e) => {
-    if (e.target.classList.contains('delete-btn') && confirm("¿Eliminar a este alumno?")) {
-        await deleteDoc(doc(db, 'schools', currentSchoolId, 'students', e.target.dataset.id));
-        showToast("Alumno eliminado.");
-        await displayStudents(currentSchoolId);
+    const targetButton = e.target.closest('.action-btn');
+    if (!targetButton) return;
+
+    if (targetButton.classList.contains('delete-btn')) {
+        if (confirm("¿Eliminar a este alumno?")) {
+            await deleteDoc(doc(db, 'schools', currentSchoolId, 'students', targetButton.dataset.id));
+            showToast("Alumno eliminado.");
+            await displayStudents(currentSchoolId);
+        }
+    }
+
+    if (targetButton.classList.contains('view-qr-btn')) {
+        qrcodeContainer.innerHTML = '';
+        qrStudentName.textContent = targetButton.dataset.name;
+        const qr = qrcode(0, 'L');
+        qr.addData(targetButton.dataset.qr);
+        qr.make();
+        qrcodeContainer.innerHTML = qr.createImgTag(6, 4);
+        qrModal.classList.remove('hidden');
     }
 });
 
@@ -234,18 +265,6 @@ function populateGroupsDropdown(querySnapshot, selectElement, includeAllOption =
         selectElement.appendChild(option);
     });
 }
-
-studentsListContainer.addEventListener('click', (e) => {
-    if (e.target.classList.contains('view-qr-btn')) {
-        qrcodeContainer.innerHTML = '';
-        qrStudentName.textContent = e.target.dataset.name;
-        const qr = qrcode(0, 'L');
-        qr.addData(e.target.dataset.qr);
-        qr.make();
-        qrcodeContainer.innerHTML = qr.createImgTag(6, 4);
-        qrModal.classList.remove('hidden');
-    }
-});
 
 closeModalBtn.addEventListener('click', () => {
     qrModal.classList.add('hidden');
@@ -267,7 +286,7 @@ function showToast(message, type = 'success') {
     toast.textContent = message;
 
     if (type === 'error') {
-        toast.style.backgroundColor = '#e53e3e';
+        toast.classList.add('error');
     }
 
     document.body.appendChild(toast);

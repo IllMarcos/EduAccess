@@ -1,18 +1,20 @@
-/* css/main.css - Versión Funcional y Elegante */
+/* css/main.css - Versión Refactorizada y Coherente */
 
 /* --- 1. Importación y Variables --- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* AÑADIDO: Importamos Montserrat para coherencia con el login */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --bg-main: #f4f7fa; /* Un gris muy claro para el fondo */
+    /* CAMBIO: Nueva paleta de colores basada en tu login.css */
+    --primary: #e8716d; /* El color principal de tu login */
+    --primary-hover: #e14943; /* Un tono más oscuro para hover */
+    --bg-main: #f4f7fa;
     --bg-sidebar: #ffffff;
     --bg-card: #ffffff;
-    --text-header: #1a202c; /* Un negro suave */
-    --text-body: #4a5568; /* Un gris medio */
-    --text-light: #a0aec0; /* Un gris claro para detalles */
-    --primary: #4299e1; /* Un azul profesional */
-    --primary-hover: #2b6cb0;
-    --border-color: #e2e8f0; /* Borde sutil */
+    --text-header: #1a202c;
+    --text-body: #4a5568;
+    --text-light: #a0aec0;
+    --border-color: #e2e8f0;
     --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
@@ -20,7 +22,8 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-    font-family: 'Inter', sans-serif;
+    /* CAMBIO: Usamos Montserrat como fuente principal */
+    font-family: 'Montserrat', sans-serif;
     background-color: var(--bg-main);
     color: var(--text-body);
 }
@@ -40,15 +43,15 @@ body {
     display: flex;
     flex-direction: column;
     position: fixed;
-    height: 100vh; /* Ocupa toda la altura de la ventana */
+    height: 100vh;
 }
 
 .main-content {
     flex-grow: 1;
-    margin-left: 250px; /* Ancho del sidebar */
+    margin-left: 250px;
     padding: 2rem;
-    height: 100vh; /* Ocupa toda la altura */
-    overflow-y: auto; /* PERMITE EL SCROLL */
+    height: 100vh;
+    overflow-y: auto;
 }
 
 /* --- 4. Componentes del Sidebar --- */
@@ -63,10 +66,9 @@ body {
 }
 
 .sidebar-header .icon {
-    color: var(--primary);
+    color: var(--primary); /* Ahora usará el nuevo color */
 }
 
-/* IMPORTANTE: Corrige el tamaño de los iconos */
 .sidebar-header svg, .sidebar-nav svg {
     width: 1.5rem;
     height: 1.5rem;
@@ -90,8 +92,9 @@ body {
     transition: color 0.2s, background-color 0.2s;
 }
 
+/* CAMBIO: El color hover ahora es un tono claro del nuevo primario */
 .sidebar-nav a:hover {
-    background-color: #ebf8ff; /* Un azul muy claro */
+    background-color: #fcebeb; 
     color: var(--primary);
 }
 
@@ -119,17 +122,22 @@ body {
 .card h2 {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--text-header);
+    /* CAMBIO: Títulos de las tarjetas con el nuevo color primario */
+    color: var(--primary);
     margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
 }
 
 .btn {
     padding: 0.6rem 1.25rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
+    border-radius: 0.3rem; /* Ligeramente más cuadrado como en el login */
+    font-weight: 500;
     cursor: pointer;
     border: 1px solid transparent;
-    transition: all 0.2s;
+    transition: all 0.2s ease-in-out;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
 }
 
 .btn-primary {
@@ -148,23 +156,26 @@ body {
     color: var(--text-body);
 }
 .btn-danger:hover {
-    background-color: #fef2f2; /* Rojo claro */
-    border-color: #fca5a5; /* Borde rojo */
-    color: #ef4444; /* Texto rojo */
+    background-color: #fef2f2;
+    border-color: #fca5a5;
+    color: #ef4444;
 }
 
 .input-field {
     width: 100%;
-    padding: 0.6rem 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    padding: 0.75rem 1rem; /* Un poco más de padding vertical */
+    border: none;
+    border-bottom: 1px solid var(--border-color); /* Estilo de input como en el login */
+    border-radius: 0;
     font-size: 1rem;
-    color: var(--text-header);
+    font-family: 'Montserrat', sans-serif;
+    color: var(--text-body);
+    transition: border-color 0.2s ease-in-out;
 }
 .input-field:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+    box-shadow: none; /* Quitamos el box-shadow azul */
 }
 
 /* --- 6. Modal --- */
@@ -173,7 +184,7 @@ body {
     top: 0; left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(34, 34, 34, 0.85); /* Fondo oscuro como en el login */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -182,10 +193,11 @@ body {
 .modal-content {
     background-color: white;
     padding: 2rem;
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
     box-shadow: var(--shadow);
     text-align: center;
 }
+
 /* --- 7. Componente de Notificación (Toast) --- */
 .toast {
     position: fixed;
@@ -200,21 +212,140 @@ body {
     z-index: 1000;
     opacity: 0;
     transition: opacity 0.3s, bottom 0.3s;
+    font-family: 'Montserrat', sans-serif;
 }
 
 .toast.show {
     opacity: 1;
     bottom: 3rem;
 }
+.toast.error { /* Aseguramos que el color de error sea coherente */
+    background-color: #e14943;
+}
+
 /* --- 8. Vistas de Contenido y Navegación Activa --- */
 .sidebar-nav a.active {
-    background-color: #ebf8ff; /* Un azul muy claro */
+    background-color: #fcebeb; /* Tono claro del nuevo primario */
     color: var(--primary);
     font-weight: 600;
 }
 
-.view {
-    display: block; /* O 'grid', 'flex', etc., según necesites */
+.view { display: block; }
+
+/* --- 9. Mejoras de Diseño de Vistas --- */
+
+/* Layout de 2 columnas para Grupos y Alumnos */
+.view-layout-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr; /* Columna fija para el form, el resto para la lista */
+    gap: 2rem;
+    align-items: flex-start;
 }
 
-/* El .hidden sigue siendo nuestro ayudante principal para ocultar vistas */
+.form-card label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--text-body);
+}
+
+/* Estilo mejorado para las listas */
+.item-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background-color: var(--bg-main);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease-in-out;
+}
+
+.list-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    border-color: var(--primary);
+}
+
+.list-item .item-info p:first-child {
+    font-weight: 600;
+    color: var(--text-header);
+}
+
+.list-item .item-info p:last-child {
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+.list-item .item-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.item-actions .action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-light);
+    padding: 0.25rem;
+    transition: color 0.2s;
+}
+.item-actions .action-btn:hover {
+    color: var(--primary);
+}
+.item-actions .action-btn.delete:hover {
+    color: #e14943;
+}
+.item-actions .action-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+
+/* Estilo para el compositor de avisos */
+.announcement-form {
+    display: grid;
+    gap: 1.5rem;
+}
+.announcement-form textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+/* --- 10. Estilos para el Modal de Confirmación --- */
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+/* Nuevo estilo para un botón de peligro sólido */
+.btn-danger-solid {
+    background-color: #e14943;
+    border-color: #e14943;
+    color: white;
+}
+.btn-danger-solid:hover {
+    background-color: #c53030;
+    border-color: #c53030;
+}
+
+/* Nuevo estilo para un botón secundario/cancelar */
+.btn-secondary {
+    background-color: transparent;
+    border-color: var(--border-color);
+    color: var(--text-body);
+}
+.btn-secondary:hover {
+    background-color: var(--bg-main);
+    border-color: #c1c9d2;
+}
