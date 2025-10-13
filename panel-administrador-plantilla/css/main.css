@@ -349,3 +349,51 @@ body {
     background-color: var(--bg-main);
     border-color: #c1c9d2;
 }
+
+/* --- 11. Estilos de Formularios y Modales (Refinados) --- */
+
+/* Mejora el espaciado en los formularios */
+.simple-form, .modal-form {
+    display: grid;
+    gap: 1rem;
+}
+.simple-form label, .modal-form label {
+    font-weight: 500;
+    text-align: left;
+    margin-bottom: -0.5rem; /* Acerca la etiqueta a su input */
+}
+.full-width-btn {
+    width: 100%;
+    margin-top: 1rem; /* Espacio antes del botón */
+}
+
+/* Estilos para el nuevo modal de edición */
+.modal-content h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-header);
+    margin-bottom: 2rem;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-secondary {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-body);
+}
+.btn-secondary:hover {
+    background-color: var(--bg-main);
+    border-color: #c1c9d2;
+}
+
+/* Iconos de acción en las listas */
+.action-btn.edit-btn:hover {
+    color: #4299e1; /* Un color azul para la acción de editar */
+    background-color: #ebf8ff;
+}

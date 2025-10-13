@@ -127,6 +127,22 @@
          </div>
     </div>
 
+    <div id="edit-student-modal" class="hidden modal-overlay">
+        <div class="modal-content">
+        <h3>Editar Alumno</h3>
+        <form id="edit-student-form" class="modal-form">
+            <label>Nombre Completo</label>
+            <input type="text" id="edit-student-name" class="input-field" required>
+            <label>Grupo</label>
+            <select id="edit-group-select" class="input-field" required></select>
+            <div class="modal-actions">
+                <button type="button" id="edit-modal-cancel-btn" class="btn btn-secondary">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </div>
+        </form>
+        </div>
+    </div>
+
     <div id="confirmation-modal" class="hidden modal-overlay">
          <div class="modal-content" style="max-width: 400px;">
             <h3 id="modal-title" style="font-size: 1.5rem; font-weight: 600; color: var(--text-header); margin-bottom: 1rem;">Confirmar Acción</h3>
