@@ -1,110 +1,72 @@
-// app/_layout.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments, SplashScreen } from 'expo-router';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth, db } from '../firebaseConfig';
-import { query, where, getDocs, collectionGroup } from 'firebase/firestore';
 import { useFonts, Montserrat_400Regular, Montserrat_700Bold, Montserrat_500Medium, Montserrat_300Light } from '@expo-google-fonts/montserrat';
 import { View } from 'react-native';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 SplashScreen.preventAutoHideAsync();
 
-// CAMBIO: La firma de la función ahora acepta 'undefined' correctamente
-function useStudentLink(user: User | null | undefined) {
-  const [linkStatus, setLinkStatus] = useState<'loading' | 'linked' | 'unlinked'>('loading');
-
-  useEffect(() => {
-    if (user === undefined) {
-      setLinkStatus('loading');
-      return;
-    }
-    if (!user) {
-      setLinkStatus('unlinked');
-      return;
-    }
-
-    const checkLink = async () => {
-      setLinkStatus('loading');
-      const studentsQuery = query(collectionGroup(db, 'students'), where('tutorUid', '==', user.uid));
-      
-      try {
-        const querySnapshot = await getDocs(studentsQuery);
-        setLinkStatus(querySnapshot.empty ? 'unlinked' : 'linked');
-      } catch { // CAMBIO: Se elimina la variable 'error' no utilizada
-        setLinkStatus('unlinked');
-      }
-    };
-
-    checkLink();
-  }, [user]);
-
-  return linkStatus;
-}
-
-
-export default function RootLayout() {
-  const [user, setUser] = useState<User | null | undefined>(undefined);
-  const router = useRouter();
+function RootLayoutNav() {
+  const { user, linkStatus, isLoading } = useAuth();
   const segments = useSegments();
-  const linkStatus = useStudentLink(user);
-  
-  const [fontsLoaded, fontError] = useFonts({
-    Montserrat_300Light,
-    Montserrat_400Regular,
-    Montserrat_500Medium,
-    Montserrat_700Bold,
-  });
+  const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
-  
-  useEffect(() => {
-    if (user === undefined || linkStatus === 'loading') return;
+    // La clave: No hacer NADA hasta que el contexto confirme que ha terminado de cargar.
+    if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const inAppGroup = segments.length > 0 && segments[0] !== '(auth)';
 
     if (!user) {
-      if (!inAuthGroup) router.replace('/(auth)/register');
+      // Si no hay usuario, debe estar en el flujo de auth.
+      if (!inAuthGroup) router.replace('/(auth)/login');
     } else {
-      if (linkStatus === 'linked') {
-        if (inAuthGroup) router.replace('/');
-      } else {
-        // CAMBIO: Verificación segura para evitar el error de tupla.
-        // Solo redirige si estamos fuera de la pantalla de vinculación.
-        const currentRoute = segments.join('/');
-        if (currentRoute !== '(auth)/link-student') {
+      // Si hay usuario...
+      if (linkStatus === 'unlinked') {
+        // ...pero no está vinculado, debe ir a la pantalla de vinculación.
+        if (segments.join('/') !== '(auth)/link-student') {
           router.replace('/(auth)/link-student');
         }
+      } else if (linkStatus === 'linked') {
+        // ...y está vinculado, debe ir al dashboard (fuera de auth).
+        if (inAuthGroup) router.replace('/');
       }
     }
-  }, [user, linkStatus, segments, router]);
+  }, [user, linkStatus, isLoading, segments, router]);
 
   useEffect(() => {
-    if ((fontsLoaded || fontError) && user !== undefined && linkStatus !== 'loading') {
+    if (!isLoading) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError, user, linkStatus]);
-
-  if (!fontsLoaded && !fontError || user === undefined || linkStatus === 'loading') {
-    return null; 
+  }, [isLoading]);
+  
+  // No renderizar nada hasta que isLoading sea false. Esto previene el parpadeo.
+  if (isLoading) {
+    return null;
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f4f7fa' }}>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: 'transparent' }
-        }}
-      >
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="index" /> 
-      </Stack>
-    </View>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="index" /> 
+    </Stack>
+  );
+}
+
+export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    Montserrat_300Light, Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold,
+  });
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
+  return (
+    <AuthProvider>
+      <View style={{ flex: 1, backgroundColor: '#f4f7fa' }}>
+        <RootLayoutNav />
+      </View>
+    </AuthProvider>
   );
 }
