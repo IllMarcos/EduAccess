@@ -1,18 +1,18 @@
 // app/index.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Modal } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { signOut, User } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { SCHOOL_ID } from '../app.config';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const HomeScreen = () => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  // Obtenemos los márgenes seguros para la parte superior e inferior
   const insets = useSafeAreaInsets();
+  const [isLogoutModalVisible, setLogoutModalVisible] = useState(false);
 
   const dateOptions: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const today = new Date().toLocaleDateString('es-MX', dateOptions);
@@ -31,12 +31,11 @@ const HomeScreen = () => {
   };
 
   return (
-    // CAMBIO: SafeAreaView ya no es necesario aquí, lo controlaremos manualmente
+    // CAMBIO: Se reemplaza SafeAreaView por un View normal para controlar el fondo.
     <View style={styles.wrapper}>
-      {/* CAMBIO: Hacemos la barra de estado translúcida */}
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       
-      {/* CAMBIO: El contenedor principal ahora tiene padding dinámico arriba y abajo */}
+      {/* El padding superior e inferior ahora se aplica a este View */}
       <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom > 0 ? insets.bottom : 20 }]}>
         <View style={styles.header}>
           <Text style={styles.title}>EduAccess</Text>
@@ -65,16 +64,39 @@ const HomeScreen = () => {
         </View>
 
         <View style={styles.footer}>
-          <TouchableOpacity onPress={handleLogout}>
+          <TouchableOpacity onPress={() => setLogoutModalVisible(true)}>
               <Text style={styles.logoutText}>Cerrar Sesión</Text>
           </TouchableOpacity>
         </View>
       </View>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isLogoutModalVisible}
+        onRequestClose={() => setLogoutModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Ionicons name="exit-outline" size={60} color={'#e8716d'} />
+            <Text style={styles.modalTitle}>Confirmar Cierre</Text>
+            <Text style={styles.modalMessage}>¿Estás seguro de que quieres cerrar tu sesión?</Text>
+            <View style={styles.confirmationActions}>
+              <TouchableOpacity style={[styles.confirmationButton, styles.cancelButton]} onPress={() => setLogoutModalVisible(false)}>
+                <Text style={[styles.confirmationButtonText, styles.cancelButtonText]}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.confirmationButton, styles.confirmButton]} onPress={handleLogout}>
+                <Text style={styles.confirmationButtonText}>Sí, Cerrar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 };
 
-// --- ESTILOS REFINADOS PARA EDGE-TO-EDGE ---
 const styles = StyleSheet.create({
     wrapper: {
       flex: 1,
@@ -87,7 +109,7 @@ const styles = StyleSheet.create({
     header: {
       width: '100%',
       alignItems: 'center',
-      paddingTop: 20, // Padding estático reducido, el dinámico hace el trabajo
+      paddingTop: 20,
     },
     title: {
       fontSize: 36,
@@ -154,7 +176,67 @@ const styles = StyleSheet.create({
       fontSize: 16,
       fontFamily: 'Montserrat_400Regular',
       padding: 10,
-    }
+    },
+    modalOverlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContainer: {
+      width: '85%',
+      maxWidth: 340,
+      backgroundColor: 'white',
+      borderRadius: 20,
+      padding: 25,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontFamily: 'Montserrat_700Bold',
+      color: '#1a202c',
+      marginTop: 15,
+      marginBottom: 10,
+      textAlign: 'center',
+    },
+    modalMessage: {
+      fontSize: 16,
+      fontFamily: 'Montserrat_400Regular',
+      color: '#4a5568',
+      textAlign: 'center',
+    },
+    confirmationActions: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 25,
+      width: '100%',
+    },
+    confirmationButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 10,
+      marginHorizontal: 5,
+      alignItems: 'center',
+    },
+    cancelButton: {
+      backgroundColor: '#f1f5f9',
+    },
+    cancelButtonText: {
+      color: '#4a5568',
+    },
+    confirmButton: {
+      backgroundColor: '#e8716d',
+    },
+    confirmationButtonText: {
+      color: 'white',
+      fontFamily: 'Montserrat_700Bold',
+      fontSize: 16,
+    },
 });
 
 export default HomeScreen;
