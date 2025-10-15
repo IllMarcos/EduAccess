@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db } from '../../firebaseConfig';
 import { query, where, getDocs, collectionGroup } from 'firebase/firestore';
@@ -7,6 +7,7 @@ type AuthContextType = {
   user: User | null;
   linkStatus: 'loading' | 'linked' | 'unlinked';
   isLoading: boolean;
+  checkLinkStatus: () => Promise<void>; // <-- NUEVA FUNCIÓN
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,34 +23,40 @@ export function useAuth() {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [linkStatus, setLinkStatus] = useState<'loading' | 'linked' | 'unlinked'>('loading');
-  const [authChecked, setAuthChecked] = useState(false);
+  const [authChecked, setAuthChecked] = useState(true);
+
+  // CAMBIO: La lógica de verificación ahora está en una función reutilizable
+  const checkLinkStatus = useCallback(async () => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setLinkStatus('loading');
+      const studentsQuery = query(collectionGroup(db, 'students'), where('tutorUid', '==', currentUser.uid));
+      try {
+        const querySnapshot = await getDocs(studentsQuery);
+        setLinkStatus(querySnapshot.empty ? 'unlinked' : 'linked');
+      } catch {
+        setLinkStatus('unlinked');
+      }
+    } else {
+      setLinkStatus('unlinked');
+    }
+  }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      setAuthChecked(true); // Verificación de Firebase Auth completada
-
-      if (currentUser) {
-        setLinkStatus('loading'); // Empezar a verificar el vínculo
-        const studentsQuery = query(collectionGroup(db, 'students'), where('tutorUid', '==', currentUser.uid));
-        try {
-          const querySnapshot = await getDocs(studentsQuery);
-          setLinkStatus(querySnapshot.empty ? 'unlinked' : 'linked');
-        } catch {
-          setLinkStatus('unlinked'); // Asumir no vinculado en caso de error
-        }
-      } else {
-        setLinkStatus('unlinked'); // Si no hay usuario, no hay vínculo
-      }
+      setAuthChecked(true);
+      checkLinkStatus(); // Verificamos el estado al iniciar y al cambiar de usuario
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [checkLinkStatus]);
 
   const value = {
     user,
     linkStatus,
     isLoading: !authChecked || (user != null && linkStatus === 'loading'),
+    checkLinkStatus, // Exponemos la función al resto de la app
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

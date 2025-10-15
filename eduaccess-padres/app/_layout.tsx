@@ -12,23 +12,18 @@ function RootLayoutNav() {
   const router = useRouter();
 
   useEffect(() => {
-    // La clave: No hacer NADA hasta que el contexto confirme que ha terminado de cargar.
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
 
     if (!user) {
-      // Si no hay usuario, debe estar en el flujo de auth.
       if (!inAuthGroup) router.replace('/(auth)/login');
     } else {
-      // Si hay usuario...
       if (linkStatus === 'unlinked') {
-        // ...pero no está vinculado, debe ir a la pantalla de vinculación.
         if (segments.join('/') !== '(auth)/link-student') {
           router.replace('/(auth)/link-student');
         }
       } else if (linkStatus === 'linked') {
-        // ...y está vinculado, debe ir al dashboard (fuera de auth).
         if (inAuthGroup) router.replace('/');
       }
     }
@@ -40,13 +35,13 @@ function RootLayoutNav() {
     }
   }, [isLoading]);
   
-  // No renderizar nada hasta que isLoading sea false. Esto previene el parpadeo.
   if (isLoading) {
     return null;
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
+    // CAMBIO CLAVE: Se desactiva la animación para evitar el parpadeo
+    <Stack screenOptions={{ headerShown: false, animation: 'none' }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="index" /> 
     </Stack>
@@ -64,6 +59,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
+      {/* El View con fondo permanente es crucial para evitar franjas de color */}
       <View style={{ flex: 1, backgroundColor: '#f4f7fa' }}>
         <RootLayoutNav />
       </View>
