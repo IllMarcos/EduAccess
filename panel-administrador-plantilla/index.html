@@ -127,7 +127,16 @@
          </div>
     </div>
 
-    <div id="edit-student-modal" class="hidden modal-overlay">
+    <div id="invitation-code-modal" class="hidden modal-overlay">
+        <div class="modal-content">
+           <h3 id="invitation-student-name" style="font-size: 1.5rem; font-weight: 600; color: var(--text-header); margin-bottom: 1rem;"></h3>
+           <p style="color: var(--text-body); margin-bottom: 1.5rem;">Entrega este código al padre o tutor para que pueda vincularse a la cuenta del alumno.</p>
+           <div id="invitation-code-container" style="padding: 1rem 1.5rem; background-color: var(--bg-main); border: 1px dashed var(--border-color); border-radius: 0.5rem; font-family: monospace; font-size: 1.5rem; color: var(--primary); font-weight: 700; letter-spacing: 2px;">
+           </div>
+           <button id="close-invitation-modal-btn" class="btn btn-primary" style="margin-top: 1.5rem;">Entendido</button>
+        </div>
+   </div>
+   <div id="edit-student-modal" class="hidden modal-overlay">
         <div class="modal-content">
         <h3>Editar Alumno</h3>
         <form id="edit-student-form" class="modal-form">

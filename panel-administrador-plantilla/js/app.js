@@ -1,12 +1,12 @@
 // ===============================================
-// 1. IMPORTACIONES (Añadimos getDoc y updateDoc)
+// 1. IMPORTACIONES
 // ===============================================
 import { db, auth } from './firebase.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { collection, addDoc, getDocs, getDoc, deleteDoc, doc, updateDoc, query, orderBy, serverTimestamp, where, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { collection, addDoc, getDocs, getDoc, deleteDoc, doc, updateDoc, query, orderBy, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ===============================================
-// 2. REFERENCIAS A ELEMENTOS DEL DOM (Añadimos el modal de edición)
+// 2. REFERENCIAS A ELEMENTOS DEL DOM
 // ===============================================
 const dashboardContainer = document.getElementById('dashboard-container');
 const views = document.querySelectorAll('.view');
@@ -27,16 +27,21 @@ const qrModal = document.getElementById('qr-modal');
 const qrStudentName = document.getElementById('qr-student-name');
 const qrcodeContainer = document.getElementById('qrcode-container');
 const closeModalBtn = document.getElementById('close-modal-btn');
-// NUEVO: Referencias para el modal de edición
 const editStudentModal = document.getElementById('edit-student-modal');
 const editStudentForm = document.getElementById('edit-student-form');
 const editModalCancelBtn = document.getElementById('edit-modal-cancel-btn');
+// INICIO: NUEVAS REFERENCIAS PARA CÓDIGO DE INVITACIÓN
+const invitationCodeModal = document.getElementById('invitation-code-modal');
+const invitationStudentName = document.getElementById('invitation-student-name');
+const invitationCodeContainer = document.getElementById('invitation-code-container');
+const closeInvitationModalBtn = document.getElementById('close-invitation-modal-btn');
+// FIN: NUEVAS REFERENCIAS
 
 // ===============================================
 // 3. ESTADO GLOBAL
 // ===============================================
 let currentSchoolId = null;
-let currentEditingStudentId = null; // Guardará el ID del alumno que estamos editando
+let currentEditingStudentId = null;
 
 // ===============================================
 // 4. NAVEGACIÓN
@@ -153,7 +158,7 @@ groupsListContainer.addEventListener('click', async (e) => {
 });
 
 // ===============================================
-// 7. GESTIÓN DE ALUMNOS (CON LÓGICA DE EDICIÓN)
+// 7. GESTIÓN DE ALUMNOS (CON LÓGICA DE INVITACIÓN)
 // ===============================================
 async function displayStudents(schoolId) {
     const studentsRef = collection(db, 'schools', schoolId, 'students');
@@ -173,12 +178,16 @@ async function displayStudents(schoolId) {
         const studentElement = document.createElement('div');
         studentElement.className = 'list-item';
         
+        // CAMBIO: Se añade el nuevo botón "Generar Código"
         studentElement.innerHTML = `
             <div class="item-info">
                 <p>${student.name}</p>
                 <p>${groupName}</p>
             </div>
             <div class="item-actions">
+                <button data-id="${doc.id}" data-name="${student.name}" class="action-btn generate-code-btn" title="Generar Código de Invitación">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" /></svg>
+                </button>
                 <button data-id="${doc.id}" class="action-btn edit-btn" title="Editar Alumno">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
                 </button>
@@ -208,10 +217,12 @@ addStudentForm.addEventListener('submit', async (e) => {
     }
 });
 
+// CAMBIO: Se añade un manejador para el nuevo botón "generate-code-btn"
 studentsListContainer.addEventListener('click', async (e) => {
     const targetButton = e.target.closest('.action-btn');
     if (!targetButton) return;
     const studentId = targetButton.dataset.id;
+    const studentName = targetButton.dataset.name;
 
     if (targetButton.classList.contains('delete-btn')) {
         if (confirm("¿Eliminar a este alumno?")) {
@@ -221,7 +232,7 @@ studentsListContainer.addEventListener('click', async (e) => {
         }
     } else if (targetButton.classList.contains('view-qr-btn')) {
         qrcodeContainer.innerHTML = '';
-        qrStudentName.textContent = targetButton.dataset.name;
+        qrStudentName.textContent = studentName;
         const qr = qrcode(0, 'L');
         qr.addData(targetButton.dataset.qr);
         qr.make();
@@ -239,6 +250,26 @@ studentsListContainer.addEventListener('click', async (e) => {
             editGroupSelect.value = student.groupId;
             editStudentModal.classList.remove('hidden');
         }
+    } else if (targetButton.classList.contains('generate-code-btn')) {
+        const studentRef = doc(db, 'schools', currentSchoolId, 'students', studentId);
+        const studentDoc = await getDoc(studentRef);
+        if (!studentDoc.exists()) return;
+
+        const studentData = studentDoc.data();
+        if (studentData.tutorUid) {
+            showToast("Este alumno ya tiene un tutor vinculado.", "error");
+            return;
+        }
+
+        // Generar y mostrar el código
+        const code = studentData.invitationCode || generateInvitationCode();
+        if (!studentData.invitationCode) {
+            await updateDoc(studentRef, { invitationCode: code });
+        }
+        
+        invitationStudentName.textContent = `Código para ${studentName}`;
+        invitationCodeContainer.textContent = code;
+        invitationCodeModal.classList.remove('hidden');
     }
 });
 
@@ -266,7 +297,7 @@ editModalCancelBtn.addEventListener('click', () => {
 });
 
 // ===============================================
-// 8. LÓGICA ADICIONAL (QR, AVISOS, TOAST)
+// 8. LÓGICA ADICIONAL
 // ===============================================
 function populateGroupsDropdown(querySnapshot, selectElement, includeAllOption = false) {
     selectElement.innerHTML = includeAllOption ? '<option value="all">Para Todos los Grupos</option>' : '<option value="">Seleccionar grupo...</option>';
@@ -277,7 +308,21 @@ function populateGroupsDropdown(querySnapshot, selectElement, includeAllOption =
         selectElement.appendChild(option);
     });
 }
+
+// INICIO: NUEVA FUNCIÓN Y EVENT LISTENER
+function generateInvitationCode() {
+    const chars = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
 closeModalBtn.addEventListener('click', () => qrModal.classList.add('hidden'));
+closeInvitationModalBtn.addEventListener('click', () => invitationCodeModal.classList.add('hidden'));
+// FIN: NUEVA FUNCIÓN Y EVENT LISTENER
+
 sendAnnouncementForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const text = announcementText.value.trim();
