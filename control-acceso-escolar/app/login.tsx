@@ -1,15 +1,18 @@
 // app/login.tsx
 import React, { useState } from 'react';
-import { View, TextInput, Text, StyleSheet, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, TextInput, Text, StyleSheet, Pressable, StatusBar, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  // Obtenemos los márgenes seguros para el padding
+  const insets = useSafeAreaInsets();
 
   const handleLogin = () => {
     if (!email || !password) {
@@ -27,51 +30,67 @@ const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.wrapper}
-    >
-      <View style={styles.container}>
-        <Text style={styles.title}>Iniciar Sesión</Text>
-        
-        <TextInput
-          style={styles.input}
-          placeholder="Correo Electrónico"
-          placeholderTextColor="#ccc"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Contraseña"
-          placeholderTextColor="#ccc"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+    // CAMBIO: Se reemplaza el KeyboardAvoidingView por un View principal
+    <View style={styles.wrapper}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      {/* CAMBIO: Este contenedor interno gestiona el padding y el teclado */}
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView 
+          contentContainerStyle={[
+            styles.container,
+            // Aplicamos los insets para respetar las áreas seguras
+            { paddingTop: insets.top, paddingBottom: insets.bottom }
+          ]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.innerContainer}>
+            <Text style={styles.title}>Iniciar Sesión</Text>
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Correo Electrónico"
+              placeholderTextColor="#ccc"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Contraseña"
+              placeholderTextColor="#ccc"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-        <Pressable style={styles.buttonAction} onPress={handleLogin}>
-          <Text style={styles.buttonActionText}>Ingresar</Text>
-        </Pressable>
-      </View>
-    </KeyboardAvoidingView>
+            <Pressable style={styles.buttonAction} onPress={handleLogin}>
+              <Text style={styles.buttonActionText}>Ingresar</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
-// CAMBIO: Estilos completamente nuevos basados en login.css
+// --- ESTILOS ACTUALIZADOS PARA EDGE-TO-EDGE ---
 const styles = StyleSheet.create({
     wrapper: {
       flex: 1,
       backgroundColor: '#f4f7fa',
     },
     container: { 
-      flex: 1, 
+      flexGrow: 1, // Permite que el ScrollView se expanda
       justifyContent: 'center', 
-      padding: 40,
+    },
+    innerContainer: {
+      paddingHorizontal: 40,
     },
     title: { 
       fontSize: 24, 
