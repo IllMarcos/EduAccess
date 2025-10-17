@@ -1,18 +1,24 @@
 import React, { useEffect } from 'react';
-import { Stack, useRouter, useSegments, SplashScreen } from 'expo-router';
+import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts, Montserrat_400Regular, Montserrat_700Bold, Montserrat_500Medium, Montserrat_300Light } from '@expo-google-fonts/montserrat';
-import { View, ActivityIndicator } from 'react-native';
+import { View } from 'react-native';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import * as Notifications from 'expo-notifications';
 
-// Mantenemos la pantalla de splash nativa visible por defecto
+// --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+// Se añaden las propiedades 'priority', 'sound', etc., que son esperadas por el tipo NotificationBehavior.
+// La forma más sencilla y compatible es simplemente devolver las opciones por defecto de la notificación.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
 SplashScreen.preventAutoHideAsync();
-
-// Componente de carga para evitar cualquier renderizado de pantallas
-const LoadingScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f4f7fa' }}>
-    <ActivityIndicator size="large" color="#007bff" />
-  </View>
-);
 
 function RootLayoutNav() {
   const { user, linkStatus, isLoading } = useAuth();
@@ -20,36 +26,46 @@ function RootLayoutNav() {
   const router = useRouter();
 
   useEffect(() => {
-    // Si isLoading es true, no hacemos absolutamente nada. La pantalla de carga se encarga.
+    // Listener para cuando se recibe una notificación
+    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notificación recibida en primer plano:', notification);
+    });
+
+    // Listener para cuando el usuario interactúa con la notificación
+    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('Interacción con notificación:', response);
+    });
+
+    // La forma correcta de limpiar es llamar al método .remove() de cada listener.
+    return () => {
+      notificationListener.remove();
+      responseListener.remove();
+    };
+  }, []);
+
+  useEffect(() => {
     if (isLoading) {
       return;
     }
 
-    // En cuanto isLoading es false, tenemos la información definitiva y podemos ocultar el splash.
-    SplashScreen.hideAsync();
-
     const inAuthGroup = segments[0] === '(auth)';
 
     if (user && linkStatus === 'linked') {
-      // CASO 1: Usuario logueado y vinculado -> A la pantalla principal.
       if (inAuthGroup) router.replace('/');
     } else if (user && linkStatus === 'unlinked') {
-      // CASO 2: Usuario logueado pero no vinculado -> A vincular.
       router.replace('/(auth)/link-student');
-    } else {
-      // CASO 3: No hay usuario -> Al login.
+    } else if (!user) {
       if (!inAuthGroup) router.replace('/(auth)/login');
     }
-  }, [isLoading, user, linkStatus]);
+    
+    SplashScreen.hideAsync();
 
-  // Si estamos cargando, MOSTRAMOS LA PANTALLA DE CARGA.
-  // Esto bloquea físicamente a Expo Router de intentar renderizar una ruta.
+  }, [isLoading, user, linkStatus, router, segments]);
+
   if (isLoading) {
-    return <LoadingScreen />;
+    return null;
   }
 
-  // Una vez la carga termina, se renderiza el Stack y el useEffect de arriba
-  // se encarga de la redirección instantánea y correcta.
   return (
     <Stack screenOptions={{ headerShown: false, animation: 'none' }}>
       <Stack.Screen name="(auth)" />
@@ -60,10 +76,7 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Montserrat_300Light,
-    Montserrat_400Regular,
-    Montserrat_500Medium,
-    Montserrat_700Bold,
+    Montserrat_300Light, Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold,
   });
 
   if (!fontsLoaded && !fontError) {
@@ -72,7 +85,9 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <RootLayoutNav />
+      <View style={{ flex: 1, backgroundColor: '#f4f7fa' }}>
+        <RootLayoutNav />
+      </View>
     </AuthProvider>
   );
 }
