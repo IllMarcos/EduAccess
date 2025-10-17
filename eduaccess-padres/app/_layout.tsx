@@ -1,11 +1,18 @@
 import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments, SplashScreen } from 'expo-router';
 import { useFonts, Montserrat_400Regular, Montserrat_700Bold, Montserrat_500Medium, Montserrat_300Light } from '@expo-google-fonts/montserrat';
-import { View } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// 1. Mantenemos la SplashScreen visible desde el inicio.
+// Mantenemos la pantalla de splash nativa visible por defecto
 SplashScreen.preventAutoHideAsync();
+
+// Componente de carga para evitar cualquier renderizado de pantallas
+const LoadingScreen = () => (
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f4f7fa' }}>
+    <ActivityIndicator size="large" color="#007bff" />
+  </View>
+);
 
 function RootLayoutNav() {
   const { user, linkStatus, isLoading } = useAuth();
@@ -13,42 +20,36 @@ function RootLayoutNav() {
   const router = useRouter();
 
   useEffect(() => {
-    // Si todavía estamos cargando la información, no hacemos absolutamente nada.
+    // Si isLoading es true, no hacemos absolutamente nada. La pantalla de carga se encarga.
     if (isLoading) {
       return;
     }
 
+    // En cuanto isLoading es false, tenemos la información definitiva y podemos ocultar el splash.
+    SplashScreen.hideAsync();
+
     const inAuthGroup = segments[0] === '(auth)';
 
-    // 2. Cuando la carga termina, tomamos la decisión de redirección.
-    if (!user) {
-      // Si no hay usuario, va al login.
-      if (!inAuthGroup) router.replace('/(auth)/login');
-    } else if (linkStatus === 'unlinked') {
-      // Si está logueado pero no vinculado, va a la pantalla de vincular.
-      router.replace('/(auth)/link-student');
-    } else if (linkStatus === 'linked') {
-      // Si está logueado y vinculado, va al home.
+    if (user && linkStatus === 'linked') {
+      // CASO 1: Usuario logueado y vinculado -> A la pantalla principal.
       if (inAuthGroup) router.replace('/');
+    } else if (user && linkStatus === 'unlinked') {
+      // CASO 2: Usuario logueado pero no vinculado -> A vincular.
+      router.replace('/(auth)/link-student');
+    } else {
+      // CASO 3: No hay usuario -> Al login.
+      if (!inAuthGroup) router.replace('/(auth)/login');
     }
-  }, [user, linkStatus, isLoading]); // El efecto depende de estos valores.
+  }, [isLoading, user, linkStatus]);
 
-  useEffect(() => {
-    // 3. SOLO cuando la carga haya terminado, ocultamos la SplashScreen.
-    if (!isLoading) {
-      SplashScreen.hideAsync();
-    }
-  }, [isLoading]);
-  
-  // 4. LA CLAVE DEFINITIVA:
-  // Si estamos cargando, no devolvemos NADA. No un `null`, no un <View>. Nada.
-  // Esto previene que el navegador Stack se renderice prematuramente.
+  // Si estamos cargando, MOSTRAMOS LA PANTALLA DE CARGA.
+  // Esto bloquea físicamente a Expo Router de intentar renderizar una ruta.
   if (isLoading) {
-    return null;
+    return <LoadingScreen />;
   }
 
-  // 5. Solo cuando la carga ha terminado, renderizamos el navegador.
-  // En este punto, el useEffect de redirección ya sabe a dónde ir.
+  // Una vez la carga termina, se renderiza el Stack y el useEffect de arriba
+  // se encarga de la redirección instantánea y correcta.
   return (
     <Stack screenOptions={{ headerShown: false, animation: 'none' }}>
       <Stack.Screen name="(auth)" />
@@ -59,19 +60,19 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Montserrat_300Light, Montserrat_400Regular, Montserrat_500Medium, Montserrat_700Bold,
+    Montserrat_300Light,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_700Bold,
   });
 
-  // Esperamos a que las fuentes carguen también antes de hacer nada.
   if (!fontsLoaded && !fontError) {
     return null;
   }
 
   return (
     <AuthProvider>
-      <View style={{ flex: 1, backgroundColor: '#f4f7fa' }}>
-        <RootLayoutNav />
-      </View>
+      <RootLayoutNav />
     </AuthProvider>
   );
 }

@@ -1,90 +1,69 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db } from '../../firebaseConfig';
-import { query, where, getDocs, collectionGroup, setDoc, DocumentReference } from 'firebase/firestore';
-import * as Notifications from 'expo-notifications';
+import { collectionGroup, query, where, getDocs } from 'firebase/firestore';
 
-type AuthContextType = {
+interface AuthContextType {
   user: User | null;
   linkStatus: 'loading' | 'linked' | 'unlinked';
   isLoading: boolean;
   checkLinkStatus: () => Promise<void>;
-};
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [linkStatus, setLinkStatus] = useState<'loading' | 'linked' | 'unlinked'>('loading');
-  const [isLoading, setIsLoading] = useState(true); // 1. La carga siempre inicia en 'true'.
+  const [isLoading, setIsLoading] = useState(true); // Siempre empieza en true
 
-  const saveFcmToken = async (studentDocRef: DocumentReference) => {
-    try {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') return;
-      const token = (await Notifications.getExpoPushTokenAsync()).data;
-      if (token) {
-        // Usamos la referencia directa para evitar una segunda consulta.
-        await setDoc(studentDocRef, { fcmToken: token }, { merge: true });
-      }
-    } catch (error) {
-      console.error("Error al guardar el token FCM:", error);
-    }
-  };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-
-      if (currentUser) {
-        // --- PROCESO SECUENCIAL OBLIGATORIO ---
-        // 2. Si hay un usuario, consultamos la base de datos.
-        const studentsQuery = query(collectionGroup(db, 'students'), where('tutorUid', '==', currentUser.uid));
+  const checkLinkStatus = async () => {
+    if (auth.currentUser) {
+      try {
+        const studentsQuery = query(collectionGroup(db, 'students'), where('tutorUid', '==', auth.currentUser.uid));
         const querySnapshot = await getDocs(studentsQuery);
-        
         const isLinked = !querySnapshot.empty;
         setLinkStatus(isLinked ? 'linked' : 'unlinked');
-
-        // Si está vinculado, intentamos guardar el token en segundo plano.
-        if (isLinked) {
-          const studentDocRef = querySnapshot.docs[0].ref;
-          saveFcmToken(studentDocRef); // No usamos await para no bloquear la UI.
-        }
-
-      } else {
-        // Si no hay usuario, el estado es definitivo.
+      } catch (error) {
+        console.error("Error checking link status:", error);
         setLinkStatus('unlinked');
       }
-
-      // 3. CRÍTICO Y FINAL: Solo cuando todo el proceso anterior ha terminado,
-      // la carga finaliza.
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe(); // Limpiamos el listener.
-  }, []); // El array vacío asegura que esto se ejecute una sola vez.
-
-  // Función para refrescar el estado desde link-student.tsx
-  const checkLinkStatus = async () => {
-    setIsLoading(true);
-    const currentUser = auth.currentUser;
-    if(currentUser) {
+    }
+  };
+  
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      // --- LÓGICA ATÓMICA Y DEFINITIVA ---
+      if (currentUser) {
+        // 1. Primero, obtenemos de forma silenciosa el estado de vinculación.
         const studentsQuery = query(collectionGroup(db, 'students'), where('tutorUid', '==', currentUser.uid));
         const querySnapshot = await getDocs(studentsQuery);
-        setLinkStatus(querySnapshot.empty ? 'unlinked' : 'linked');
-    } else {
+        const isLinked = !querySnapshot.empty;
+        
+        // 2. AHORA SÍ: Actualizamos todo el estado en un solo paso.
+        // La aplicación no sabrá que hay un usuario hasta este preciso momento.
+        setUser(currentUser);
+        setLinkStatus(isLinked ? 'linked' : 'unlinked');
+        setIsLoading(false);
+
+      } else {
+        // 3. Si no hay usuario, el estado también es definitivo y se actualiza en un solo paso.
+        setUser(null);
         setLinkStatus('unlinked');
-    }
-    setIsLoading(false);
-  }
+        setIsLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []); // Se ejecuta solo una vez
 
   const value = { user, linkStatus, isLoading, checkLinkStatus };
 
