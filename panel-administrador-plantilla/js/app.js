@@ -30,12 +30,10 @@ const closeModalBtn = document.getElementById('close-modal-btn');
 const editStudentModal = document.getElementById('edit-student-modal');
 const editStudentForm = document.getElementById('edit-student-form');
 const editModalCancelBtn = document.getElementById('edit-modal-cancel-btn');
-// INICIO: NUEVAS REFERENCIAS PARA CÓDIGO DE INVITACIÓN
 const invitationCodeModal = document.getElementById('invitation-code-modal');
 const invitationStudentName = document.getElementById('invitation-student-name');
 const invitationCodeContainer = document.getElementById('invitation-code-container');
 const closeInvitationModalBtn = document.getElementById('close-invitation-modal-btn');
-// FIN: NUEVAS REFERENCIAS
 
 // ===============================================
 // 3. ESTADO GLOBAL
@@ -178,7 +176,6 @@ async function displayStudents(schoolId) {
         const studentElement = document.createElement('div');
         studentElement.className = 'list-item';
         
-        // CAMBIO: Se añade el nuevo botón "Generar Código"
         studentElement.innerHTML = `
             <div class="item-info">
                 <p>${student.name}</p>
@@ -217,7 +214,6 @@ addStudentForm.addEventListener('submit', async (e) => {
     }
 });
 
-// CAMBIO: Se añade un manejador para el nuevo botón "generate-code-btn"
 studentsListContainer.addEventListener('click', async (e) => {
     const targetButton = e.target.closest('.action-btn');
     if (!targetButton) return;
@@ -261,7 +257,6 @@ studentsListContainer.addEventListener('click', async (e) => {
             return;
         }
 
-        // Generar y mostrar el código
         const code = studentData.invitationCode || generateInvitationCode();
         if (!studentData.invitationCode) {
             await updateDoc(studentRef, { invitationCode: code });
@@ -297,8 +292,26 @@ editModalCancelBtn.addEventListener('click', () => {
 });
 
 // ===============================================
-// 8. LÓGICA ADICIONAL
+// 8. LÓGICA DE AVISOS Y OTRAS UTILIDADES
 // ===============================================
+
+// --- ESTA ES LA FUNCIÓN PARA ENVIAR AVISOS QUE YA TENÍAS ---
+// --- Y QUE SE CONECTA CON LA APP DE PADRES. ¡ESTÁ PERFECTA! ---
+sendAnnouncementForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = announcementText.value.trim();
+    if (text && currentSchoolId) {
+        // Esta línea es la que guarda el aviso en Firestore.
+        await addDoc(collection(db, 'schools', currentSchoolId, 'announcements'), { 
+            text, 
+            target: announcementGroupSelect.value, 
+            createdAt: serverTimestamp() 
+        });
+        showToast('¡Aviso enviado con éxito!');
+        sendAnnouncementForm.reset();
+    }
+});
+
 function populateGroupsDropdown(querySnapshot, selectElement, includeAllOption = false) {
     selectElement.innerHTML = includeAllOption ? '<option value="all">Para Todos los Grupos</option>' : '<option value="">Seleccionar grupo...</option>';
     querySnapshot.forEach(doc => {
@@ -309,7 +322,6 @@ function populateGroupsDropdown(querySnapshot, selectElement, includeAllOption =
     });
 }
 
-// INICIO: NUEVA FUNCIÓN Y EVENT LISTENER
 function generateInvitationCode() {
     const chars = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789';
     let code = '';
@@ -319,19 +331,6 @@ function generateInvitationCode() {
     return code;
 }
 
-closeModalBtn.addEventListener('click', () => qrModal.classList.add('hidden'));
-closeInvitationModalBtn.addEventListener('click', () => invitationCodeModal.classList.add('hidden'));
-// FIN: NUEVA FUNCIÓN Y EVENT LISTENER
-
-sendAnnouncementForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const text = announcementText.value.trim();
-    if (text && currentSchoolId) {
-        await addDoc(collection(db, 'schools', currentSchoolId, 'announcements'), { text, target: announcementGroupSelect.value, createdAt: serverTimestamp() });
-        showToast('¡Aviso enviado con éxito!');
-        sendAnnouncementForm.reset();
-    }
-});
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = 'toast';
@@ -344,3 +343,7 @@ function showToast(message, type = 'success') {
         toast.addEventListener('transitionend', () => toast.remove());
     }, 3000);
 }
+
+// Listeners para cerrar los modales
+closeModalBtn.addEventListener('click', () => qrModal.classList.add('hidden'));
+closeInvitationModalBtn.addEventListener('click', () => invitationCodeModal.classList.add('hidden'));
